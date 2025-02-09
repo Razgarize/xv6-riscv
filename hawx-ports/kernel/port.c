@@ -157,17 +157,22 @@ port_init()
     // non-kernal ports. Make sure that all ports are empty.
 
     // YOUR CODE HERE
-
-    //  Kernel based ports get initilized and marked by the kernel.
-    ports[PORT_CONSOLEIN].owner = 0;
-    ports[PORT_CONSOLEOUT].owner = 0;
-    ports[PORT_DISKCMD].owner = 0;
-
-    for (int i = 3; i < NPORT; i++)
-    {
-
+    int NULL = 0;
+    for(int i=0; i<NPORT; i++) {
+        if(i == PORT_CONSOLEIN || i == PORT_CONSOLEOUT || i == PORT_DISKCMD || i == PORT_DISKCMD) {
+            ports[i].owner = 0;
+        } else {
+            ports[i].free = 1;
+        }
+        for(int j=0; j<PORT_BUF_SIZE; j++) {
+            ports[i].buffer[j] = NULL;
+        }
+        ports[i].head = 0;
+        ports[i].tail = 0;
+        ports[i].count = 0;
     }
-    
+
+
 }
 
 
@@ -179,6 +184,13 @@ port_close(int port)
     // if it is open, we empty its contents and mark it as free.
 
     // YOUR CODE HERE
+    if (!ports[port].free) {
+        ports[port].free = 1;
+        ports[port].owner = 0;
+        ports[port].head = 0;
+        ports[port].tail = 0;
+        ports[port].count = 0;
+    }
 }
 
 
@@ -196,8 +208,25 @@ port_acquire(int port, procid_t proc_id)
     // If this operation fails, return -1.
 
     // YOUR CODE HERE
-    
-    return -1;
+    if (port == -1) {
+        for (int i = 0; i < NPORT; i++) {
+            if (ports[i].free) {
+                ports[i].free = 0;
+                ports[i].owner = proc_id;
+                return i;
+            }
+        }
+        return -1;
+    } else {
+        if (ports[port].free) {
+            ports[port].free = 0;
+            ports[port].owner = proc_id;
+            return port;
+        } else {
+            return -1;
+        }
+    }
+   
 }
 
 
@@ -212,7 +241,22 @@ port_write(int port, char *buf, int n)
     // write it.
 
     // YOUR CODE HERE
-    return 0;
+    if (ports[port].free == 0) {
+        return -1;
+    }
+
+    int bytes_written = 0;
+    for (int i = 0; i < n; i++) {
+        if (ports[port].count == PORT_BUF_SIZE) {
+            return bytes_written;
+        }
+        ports[port].buffer[ports[port].tail] = buf[i];
+        ports[port].tail = (ports[port].tail + 1) % PORT_BUF_SIZE;
+        ports[port].count++;
+        bytes_written++;
+    }
+
+    
 }
 
 
@@ -227,7 +271,7 @@ port_read(int port, char *buf, int n)
     // Be sure to update count as you read.
 
     // YOUR CODE HERE
-    return 0;
+
 }
 
 
