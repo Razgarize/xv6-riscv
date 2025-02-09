@@ -157,6 +157,17 @@ port_init()
     // non-kernal ports. Make sure that all ports are empty.
 
     // YOUR CODE HERE
+
+    //  Kernel based ports get initilized and marked by the kernel.
+    ports[PORT_CONSOLEIN].owner = 0;
+    ports[PORT_CONSOLEOUT].owner = 0;
+    ports[PORT_DISKCMD].owner = 0;
+
+    for (int i = 3; i < NPORT; i++)
+    {
+
+    }
+    
 }
 
 
