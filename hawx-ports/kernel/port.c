@@ -159,11 +159,13 @@ port_init()
     // YOUR CODE HERE
     int NULL = 0;
     for(int i=0; i<NPORT; i++) {
+        // The Predefined ports (see port.h) should all be owned by the kernel.
         if(i == PORT_CONSOLEIN || i == PORT_CONSOLEOUT || i == PORT_DISKCMD || i == PORT_DISKCMD) {
             ports[i].owner = 0;
-        } else {
+        } // All other ports should be marked as free.
+        else {
             ports[i].free = 1;
-        }
+        } // All ports should have their start and end set to indicate an empty buffer.
         for(int j=0; j<PORT_BUF_SIZE; j++) {
             ports[i].buffer[j] = NULL;
         }
@@ -241,7 +243,7 @@ port_write(int port, char *buf, int n)
     // write it.
 
     // YOUR CODE HERE
-    if (ports[port].free == 0) {
+    if (ports[port].free) {
         return -1;
     }
 
@@ -255,6 +257,8 @@ port_write(int port, char *buf, int n)
         ports[port].count++;
         bytes_written++;
     }
+
+    return bytes_written;
 
     
 }
@@ -271,7 +275,22 @@ port_read(int port, char *buf, int n)
     // Be sure to update count as you read.
 
     // YOUR CODE HERE
+    if (ports[port].free) {
+        return -1;
+    }
 
+    int bytes_read = 0;
+    for (int i = 0; i < n; i++) {
+        if (ports[port].count == 0) {
+            return bytes_read;
+        }
+        buf[i] = ports[port].buffer[ports[port].head];
+        ports[port].head = (ports[port].head + 1) % PORT_BUF_SIZE;
+        ports[port].count--;
+        bytes_read++;
+    }
+
+    return bytes_read;
 }
 
 
